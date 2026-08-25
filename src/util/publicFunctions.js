@@ -1,6 +1,7 @@
 import { doc } from "prettier";
 import { Node } from "../melody/melody-types/index.js";
 import {
+    CONTRACT_ENVIRONMENT,
     EXPRESSION_NEEDED,
     INSIDE_OF_STRING,
     PRESERVE_LEADING_WHITESPACE,
@@ -249,8 +250,11 @@ const wrapExpressionIfNeeded = (path, fragments, node = {}) => {
     if (wrapType === EXPRESSION_NEEDED) {
         // Same predicate as printExpressionStatement, so a standalone `{{ … }}`
         // and one embedded in an attribute agree on where the break goes.
+        // An enclosing attribute value forces it regardless of node type: a break
+        // there writes a newline into the attribute's value.
         const contract =
-            isContractableNodeType(node) && !Node.isObjectExpression(node);
+            firstValueInAncestorChain(path, CONTRACT_ENVIRONMENT, false) ||
+            (isContractableNodeType(node) && !Node.isObjectExpression(node));
         wrapInEnvironment(fragments, node.trimLeft, node.trimRight, contract);
     } else if (wrapType === INSIDE_OF_STRING) {
         wrapInStringInterpolation(fragments);

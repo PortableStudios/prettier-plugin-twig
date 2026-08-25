@@ -1,0 +1,24 @@
+<div>
+  <div>
+    <div>
+      <span
+        class="inline-block typography-label-md uppercase {{ accent }} lg:[writing-mode:sideways-lr]"
+      >
+        {{ sectionLabel }}
+      </span>
+    </div>
+  </div>
+</div>
+
+{# breaking these would put newlines inside the attribute value #}
+<p title="a fairly long title attribute here {{ value }} and some more text after it to push over">
+  z
+</p>
+<img
+  alt="descriptive text {{ image.title }} more descriptive text that runs on and on and on"
+  src="/a.jpg"
+/>
+
+{# short ones must stay put #}
+<a class="{{ cls }}">short</a>
+<span class="a {{ b }} c">t</span>
