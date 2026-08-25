@@ -1,0 +1,21 @@
+{% js %}
+  (function () {
+    var wrapper = document.getElementById('{{ wrapperId }}');
+    window.hbspt.forms.create({
+      formId: "{{ formId }}",
+      // Suppress HubSpot's default stylesheet — our CSS owns the form.
+      css: "",
+    });
+  })();
+{% endjs %}
+
+{% css %}
+  .thing {
+    /* a comment that is quite long and would otherwise be reflowed into code */
+    color: var(--color-{{ name }});
+  }
+{% endcss %}
+
+{% cache %}
+  <p>this is not a raw tag — it should still be formatted</p>
+{% endcache %}

@@ -79,6 +79,14 @@ const options = {
         default: [{ value: [] }],
         description: "Make custom Twig tests known to the parser."
     },
+    twigRawTags: {
+        type: "path",
+        category: "Global",
+        array: true,
+        default: [{ value: ["js", "css", "script"] }],
+        description:
+            "Tags whose body is not template markup and must be emitted verbatim."
+    },
     twigMultiTags: {
         type: "path",
         category: "Global",
