@@ -358,6 +358,67 @@ const isWhitespaceNode = node => {
     );
 };
 
+const textValueOf = node =>
+    Node.isPrintTextStatement(node) && typeof node.value?.value === "string"
+        ? node.value.value
+        : null;
+
+/**
+ * Did the source have whitespace at the start of this element's content? Covers
+ * both a whitespace-only first child (`<span>\n  <b>x</b></span>`) and leading
+ * spaces inside the first text child (`<span> E </span>`) — two different nodes
+ * strip those, so both have to be checked before either does.
+ *
+ * @param {object[]} children
+ * @returns {boolean}
+ */
+const startsWithWhitespace = children => {
+    if (!Array.isArray(children) || children.length === 0) {
+        return false;
+    }
+    const first = children[0];
+    if (isWhitespaceNode(first)) {
+        return true;
+    }
+    const text = textValueOf(first);
+    return text !== null && /^\s/.test(text);
+};
+
+/**
+ * @see startsWithWhitespace
+ * @param {object[]} children
+ * @returns {boolean}
+ */
+const endsWithWhitespace = children => {
+    if (!Array.isArray(children) || children.length === 0) {
+        return false;
+    }
+    const last = children[children.length - 1];
+    if (isWhitespaceNode(last)) {
+        return true;
+    }
+    const text = textValueOf(last);
+    return text !== null && /\s$/.test(text);
+};
+
+/**
+ * Inline elements whose default display is inline-block, so the browser trims
+ * whitespace at their content boundary and a formatter may drop it. Verified
+ * against prettier's own HTML printer: of every tag in INLINE_HTML_ELEMENTS,
+ * `button` is the only one it treats this way.
+ *
+ * @type {string[]}
+ */
+const WHITESPACE_INSENSITIVE_INLINE_ELEMENTS = ["button"];
+
+/**
+ * @param {object} node
+ * @returns {boolean}
+ */
+const isWhitespaceInsensitiveInlineElement = node =>
+    Node.isElement(node) &&
+    WHITESPACE_INSENSITIVE_INLINE_ELEMENTS.indexOf(node.name) >= 0;
+
 const isEmptySequence = node =>
     Node.isSequenceExpression(node) && node.expressions.length === 0;
 
@@ -593,6 +654,9 @@ export {
     testCurrentAndParentNodes,
     isWhitespaceOnly,
     isWhitespaceNode,
+    startsWithWhitespace,
+    endsWithWhitespace,
+    isWhitespaceInsensitiveInlineElement,
     isEmptySequence,
     hasNoNewlines,
     countNewlines,

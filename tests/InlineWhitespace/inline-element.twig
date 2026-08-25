@@ -1,0 +1,22 @@
+{# 1. Long inline link: text must stay welded to the tags (underline would leak) #}
+<ul>
+    <li>
+        <a href="{{ impactArea.url }}" class="underline hover:no-underline">{{ impactArea.title }}</a>
+    </li>
+</ul>
+
+{# 2. Short content, long attribute list: content must not gain whitespace #}
+<span class="glyph__char inline-block will-change-transform motion-safe:cursor-pointer" @mouseenter="drop(0)">4</span>
+
+{# 3. Inline element between text nodes: existing whitespace must be preserved #}
+<p>abc<span> E </span>fg</p>
+
+{# 4. Inline element already broken in source: may stay broken #}
+<p>
+    <a href="/somewhere-quite-long-indeed" class="typography-label-md underline">
+        A link whose text was already on its own line
+    </a>
+</p>
+
+{# 5. Block element control: must still break normally #}
+<div class="a-fairly-long-class-list-here-to-force-the-line-over-the-print-width-limit">Block content</div>
