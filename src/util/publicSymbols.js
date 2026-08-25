@@ -47,6 +47,13 @@ const FILTER_BLOCK = Symbol("FILTER_BLOCK");
  * Signals to text nodes that they should preserve leading
  * whitespace (whitespace at the beginning)
  */
+/**
+ * Set on a node whose descendants' `{{ … }}` delimiters must stay welded to the
+ * expression. Inside an attribute value a break is not cosmetic: it puts a real
+ * newline into the value.
+ */
+const CONTRACT_ENVIRONMENT = Symbol("CONTRACT_ENVIRONMENT");
+
 const PRESERVE_LEADING_WHITESPACE = Symbol("PRESERVE_LEADING_WHITESPACE");
 
 /**
@@ -87,6 +94,7 @@ export {
     INSIDE_OF_STRING,
     EXPRESSION_NEEDED,
     FILTER_BLOCK,
+    CONTRACT_ENVIRONMENT,
     PRESERVE_TRAILING_WHITESPACE,
     PRESERVE_LEADING_WHITESPACE,
     NEWLINES_ONLY,

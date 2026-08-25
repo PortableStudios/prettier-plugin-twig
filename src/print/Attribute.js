@@ -1,5 +1,9 @@
 import { Node } from "../melody/melody-types/index.js";
-import { EXPRESSION_NEEDED, STRING_NEEDS_QUOTES } from "../util/index.js";
+import {
+    CONTRACT_ENVIRONMENT,
+    EXPRESSION_NEEDED,
+    STRING_NEEDS_QUOTES
+} from "../util/index.js";
 
 const mayCorrectWhitespace = attrName =>
     ["id", "class", "type"].indexOf(attrName) > -1;
@@ -24,6 +28,7 @@ const printAttribute = (node, path, print = print) => {
     const docs = [path.call(print, "name")];
     node[EXPRESSION_NEEDED] = true;
     node[STRING_NEEDS_QUOTES] = false;
+    node[CONTRACT_ENVIRONMENT] = true;
     if (node.value) {
         const quote = node.quoteChar || '"';
         docs.push("=", quote);
