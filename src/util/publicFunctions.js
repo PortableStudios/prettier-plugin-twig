@@ -106,6 +106,23 @@ const isContractableNodeType = node => {
 const isNotExpression = node =>
     Node.isUnaryLike(node) && node.operator === "not";
 
+/**
+ * Does this node need parentheses when it sits under a postfix operator?
+ *
+ * In Twig `|`, `.`, `[]` and calls bind tighter than every infix and prefix
+ * operator, so an unparenthesised operand rebinds: `(-1)|abs` printed as
+ * `-1|abs` means `-(1|abs)`, and `(a ?: b).c` printed bare means `a ?: (b.c)`.
+ *
+ * A negative number is its own case: the lexer folds the sign into the literal,
+ * so it isn't a unary node, but it still reparses wrongly without parentheses.
+ *
+ * @param {object} node
+ * @returns {boolean}
+ */
+const needsParenthesesUnderPostfix = node =>
+    isMultipartExpression(node) ||
+    (Node.isNumericLiteral(node) && Number(node.value) < 0);
+
 const isMultipartExpression = node => {
     return (
         Node.isBinaryExpression(node) ||
@@ -709,6 +726,7 @@ export {
     isContractableNodeType,
     isNotExpression,
     isMultipartExpression,
+    needsParenthesesUnderPostfix,
     registerContractableNodeType,
     quoteChar,
     isValidIdentifierName,

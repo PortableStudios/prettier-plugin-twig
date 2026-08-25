@@ -15,6 +15,12 @@ describe("Parentheses", () => {
         expect(actual).toContain("not (a and b)");
         expect(actual).toContain("(a ? b : c) ~ d");
 
+        // `|`, `.` and `[]` bind tighter than any infix or prefix operator, so a
+        // multipart operand under one of them keeps its parentheses too.
+        expect(actual).toContain("(-1)|abs");
+        expect(actual).toContain("(a ?: b).c");
+        expect(actual).toContain("('q' ~ 'r')[0]");
+
         await expect(actual).toMatchFileSnapshot(snapshotFile);
     });
 });

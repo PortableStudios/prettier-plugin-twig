@@ -11,3 +11,7 @@
 {{ a|default('x')|upper }}
 {{ a.b.c }}
 {{ a }}
+{{ (-1)|abs }}
+{{ (a ?: b).c }}
+{{ ('q' ~ 'r')[0] }}
+{{ (num + num).x|default('nil') }}

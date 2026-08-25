@@ -82,8 +82,35 @@ const registerTestExtensions = (testExpressions = []) => {
     );
 };
 
+const DEFAULT_RAW_TAGS = ["js", "css", "script"];
+
+/**
+ * A raw tag only reaches the verbatim printer if it is also a registered
+ * multi-tag, so register each one automatically. Without this, twigRawTags is
+ * inert on its own and the body it promises to protect is reflowed as prose.
+ *
+ * @param {string[]} multiTags
+ * @param {string[]} rawTags
+ * @returns {string[]}
+ */
+const withRawTagsRegistered = (multiTags, rawTags) => {
+    const declared = new Set(
+        multiTags.map(entry => String(entry).split(",")[0].trim())
+    );
+    const missing = rawTags
+        .filter(tag => !declared.has(tag))
+        .map(tag => `${tag},end${tag}`);
+
+    return [...multiTags, ...missing];
+};
+
 const parse = (text, parsers, options) => {
-    const multiTagConfig = getMultiTagConfig(options.twigMultiTags || []);
+    const multiTagConfig = getMultiTagConfig(
+        withRawTagsRegistered(
+            options.twigMultiTags || [],
+            options.twigRawTags || DEFAULT_RAW_TAGS
+        )
+    );
     registerTestExtensions(options.twigTestExpressions || []);
 
     const extensions = [coreExtension];
@@ -99,8 +126,11 @@ const parse = (text, parsers, options) => {
         // failed build; keeping the file verbatim leaves it merely unformatted,
         // which is what an unrepresentable template deserves. The warning is the
         // signal that it happened.
+        // Name the file: over a whole corpus a bare message doesn't say which one
+        // stopped being formatted, and --check still exits 0.
+        const where = options.filepath ? ` ${options.filepath}:` : "";
         console.warn(
-            `[prettier-plugin-twig] left unformatted, could not parse: ${cause.message}`
+            `[prettier-plugin-twig]${where} left unformatted, could not parse: ${cause.message}`
         );
         ast = new PassthroughStatement(text, cause);
     }

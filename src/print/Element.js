@@ -113,7 +113,8 @@ const printElement = (node, path, print, options) => {
     // Raw text elements are emitted exactly as written. Prettier core hands these
     // to its JS/CSS printers, which isn't available here: the body may be
     // interleaved with Twig output tags that no JS or CSS parser accepts.
-    if (RAW_TEXT_ELEMENTS.indexOf(node.name) > -1) {
+    // HTML tag names are case-insensitive, so `<SCRIPT>` is a script too.
+    if (RAW_TEXT_ELEMENTS.indexOf(String(node.name).toLowerCase()) > -1) {
         const source = path.stack.length
             ? path.stack[0][ORIGINAL_SOURCE]
             : null;

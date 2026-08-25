@@ -8,7 +8,7 @@ import {
     shouldExpressionsBeWrapped,
     wrapInStringInterpolation,
     someParentNode,
-    isMultipartExpression,
+    needsParenthesesUnderPostfix,
     getDeepProperty
 } from "../util/index.js";
 
@@ -88,7 +88,7 @@ const printFilterExpression = (node, path, print, options) => {
 
     const finalTarget = path.call(print, ...pathToFinalTarget);
     const isFilterBlock = isInFilterBlock(path); // Special case of FilterBlockStatement
-    const targetNeedsParentheses = isMultipartExpression(
+    const targetNeedsParentheses = needsParenthesesUnderPostfix(
         getDeepProperty(node, ...pathToFinalTarget)
     );
     const parts = [];
