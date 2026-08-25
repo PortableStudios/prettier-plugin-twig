@@ -9,3 +9,12 @@ describe("Declaration", () => {
         expect(actual).toMatchFileSnapshot(snapshotFile);
     });
 });
+
+describe("Declaration casing", () => {
+    it("should normalise the doctype to lower case", async () => {
+        const { actual, snapshotFile } = await run_spec(import.meta.url, {
+            source: "doctype-case.twig"
+        });
+        await expect(actual).toMatchFileSnapshot(snapshotFile);
+    });
+});
