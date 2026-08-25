@@ -117,7 +117,14 @@ const printElement = (node, path, print, options) => {
             contents.push("</", node.name);
         }
         result.push(indent(contents));
-        result.push(weldClose ? [softline, ">"] : [line, "</", node.name, ">"]);
+        // The closing bracket gets its own group so it only leaves the line when
+        // it genuinely doesn't fit. Sharing the element's group made it break
+        // whenever the opening tag did, stranding a lone ">" under every element
+        // whose attributes were long -- and a break here is optional either way,
+        // since neither form adds rendered whitespace.
+        result.push(
+            weldClose ? group([softline, ">"]) : [line, "</", node.name, ">"]
+        );
 
         return group(result, { id: groupElement });
     }
