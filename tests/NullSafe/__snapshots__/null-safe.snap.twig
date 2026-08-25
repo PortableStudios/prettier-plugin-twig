@@ -7,8 +7,8 @@
 {{ entry?.items?.first()?.title }}
 
 {# `?` adjacent to something else must not become a null-safe access #}
-{{ a ? : b }}
-{{ a ? : b.c }}
+{{ a ?: b }}
+{{ a ?: b.c }}
 {{ cond ? value : other }}
 {{ cond ? a.b : c.d }}
 {{ a.b }}
