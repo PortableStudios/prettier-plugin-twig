@@ -1,0 +1,28 @@
+{% macro picture(items, params = {}, config = {}) %}
+    {{ items }}
+{% endmacro %}
+
+{% macro img(image, transform, params = {}, classes = []) %}
+    {{ image }}
+{% endmacro %}
+
+{# every default the old ladder already handled — must not regress #}
+{% macro literals(a = 'text', b = '', c = 42, d = null, e = true, f = false) %}
+    {{ a }}
+{% endmacro %}
+
+{# richer expressions #}
+{% macro rich(
+    a = {
+        key: 'value',
+        n: 1
+    },
+    b = [1, 2, 3],
+    c = 'a' ~ 'b')
+%}
+    {{ a }}
+{% endmacro %}
+
+{% macro plain(one, two) %}
+    {{ one }}
+{% endmacro %}
