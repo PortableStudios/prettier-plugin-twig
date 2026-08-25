@@ -13,13 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import {
-    BooleanLiteral,
-    Identifier,
-    NullLiteral,
-    NumericLiteral,
-    StringLiteral
-} from "../../melody-types/index.js";
+import { Identifier } from "../../melody-types/index.js";
 import {
     Types,
     setStartFromToken,
@@ -46,37 +40,18 @@ export const MacroParser = {
                 args.push(createNode(Identifier, arg, arg.text));
             } else {
                 tokens.expect(Types.ASSIGNMENT);
-                let value;
-                let node;
-                if (tokens.nextIf(Types.STRING_START)) {
-                    if (tokens.test(Types.STRING_END)) {
-                        // handle empty string as default value
-                        value = tokens.expect(Types.STRING_END);
-                        node = createNode(StringLiteral, value, "");
-                    } else {
-                        // handle non-empty string as default value
-                        value = tokens.expect(Types.STRING);
-                        tokens.expect(Types.STRING_END);
-                        node = createNode(StringLiteral, value, value.text);
-                    }
-                }
-                if (tokens.test(Types.NUMBER)) {
-                    value = tokens.expect(Types.NUMBER);
-                    node = createNode(NumericLiteral, value, value.text);
-                }
-                if (tokens.test(Types.NULL)) {
-                    value = tokens.expect(Types.NULL);
-                    node = createNode(NullLiteral, value, value.text);
-                }
-                if (tokens.test(Types.TRUE)) {
-                    value = tokens.expect(Types.TRUE);
-                    node = createNode(BooleanLiteral, value, value.text);
-                }
-                if (tokens.test(Types.FALSE)) {
-                    value = tokens.expect(Types.FALSE);
-                    node = createNode(BooleanLiteral, value, value.text);
-                }
-                args.push(createNode(Identifier, arg, arg.text, node));
+                // Any expression is a valid default value, so let the expression
+                // matcher handle it. The hand-rolled ladder this replaces covered
+                // only string/number/null/true/false, so `params = {}` and
+                // `items = []` failed with `Expected comma or ")"`.
+                args.push(
+                    createNode(
+                        Identifier,
+                        arg,
+                        arg.text,
+                        parser.matchExpression()
+                    )
+                );
             }
 
             if (!tokens.nextIf(Types.COMMA) && !tokens.test(Types.RPAREN)) {
