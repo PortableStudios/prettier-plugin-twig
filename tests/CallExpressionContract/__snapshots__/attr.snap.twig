@@ -1,0 +1,20 @@
+<svg {{ attr({ class: 'h-auto', width: 640 }) }}></svg>
+
+<svg
+    {{ attr({
+        class: ['h-auto', class],
+        width: 640,
+        height: 114,
+        viewBox: '0 0 640 114',
+        role: label ? 'img' : null,
+        'aria-hidden': label ? null : 'true'
+    }) }}
+></svg>
+
+{{ someFunction() }}
+{{ path('route', { id: entry.id }) }}
+{{ aVeryLongFunctionName(
+    withAnArgument,
+    andAnother,
+    andAThirdOneToForceBreaking
+) }}

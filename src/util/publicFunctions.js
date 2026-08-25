@@ -78,7 +78,10 @@ const CONTRACTABLE_NODE_TYPES = [
     "ObjectExpression",
     "BinaryExpression",
     "ConditionalExpression",
-    "ArrayExpression"
+    "ArrayExpression",
+    // A call breaks inside its own argument list, so the delimiters have no
+    // reason to leave the expression: `{{ attr({ … }) }}`, not `{{\n attr({…})\n}}`.
+    "CallExpression"
 ];
 
 const registerContractableNodeType = nodeType => {
@@ -244,7 +247,11 @@ const shouldExpressionsBeWrapped = path => {
 const wrapExpressionIfNeeded = (path, fragments, node = {}) => {
     const wrapType = shouldExpressionsBeWrapped(path);
     if (wrapType === EXPRESSION_NEEDED) {
-        wrapInEnvironment(fragments, node.trimLeft, node.trimRight);
+        // Same predicate as printExpressionStatement, so a standalone `{{ … }}`
+        // and one embedded in an attribute agree on where the break goes.
+        const contract =
+            isContractableNodeType(node) && !Node.isObjectExpression(node);
+        wrapInEnvironment(fragments, node.trimLeft, node.trimRight, contract);
     } else if (wrapType === INSIDE_OF_STRING) {
         wrapInStringInterpolation(fragments);
     }
@@ -257,11 +264,19 @@ const wrapExpressionIfNeeded = (path, fragments, node = {}) => {
  * @param {array} parts The finished, printed element,
  *                  except for concatenation and grouping
  */
-const wrapInEnvironment = (parts, trimLeft = false, trimRight = false) => {
+const wrapInEnvironment = (
+    parts,
+    trimLeft = false,
+    trimRight = false,
+    contract = false
+) => {
     const leftBraces = trimLeft ? "{{-" : "{{";
     const rightBraces = trimRight ? "-}}" : "}}";
-    parts.unshift(leftBraces, line);
-    parts.push(line, rightBraces);
+    // An expression that can break inside itself has no reason to strand its
+    // delimiters on their own lines, so hold them against it.
+    const padding = contract ? " " : line;
+    parts.unshift(leftBraces, padding);
+    parts.push(padding, rightBraces);
 };
 
 /**
