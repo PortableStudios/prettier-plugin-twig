@@ -1,0 +1,8 @@
+{{ a ?: b }}
+{{ case.statLabel ?: case.title }}
+{{ entry.heading ?: entry.title ?: 'Untitled' }}
+
+{# full ternaries must be unaffected #}
+{{ cond ? yes : no }}
+{{ cond ? yes }}
+{{ someVeryLongConditionExpression ? aRatherLongConsequentValue : anEquallyLongAlternate }}
