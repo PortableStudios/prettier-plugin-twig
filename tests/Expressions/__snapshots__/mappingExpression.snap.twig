@@ -52,8 +52,7 @@
 {% props theme = null, text = null %}
 
 <div
-    {{
-    attributes.defaults({
+    {{ attributes.defaults({
         class: cva({
             base: 'alert shadow-md',
             variants: {
@@ -67,6 +66,5 @@
         }).apply({
             theme
         })
-    })
-    }}
+    }) }}
 ></div>
