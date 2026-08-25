@@ -60,8 +60,11 @@ const otherNeedsParentheses = (node, otherProp) => {
             isBinaryOther &&
             hasLogicalOperator(other)) ||
         Node.isFilterExpression(other) ||
-        (Node.isBinaryConcatExpression(node) &&
-            Node.isConditionalExpression(other))
+        // A ternary has lower precedence than every binary operator, so as an
+        // operand it always needs parentheses -- not just under `~`. Without
+        // them `a ?? (b ? c : d)` reassociates to `(a ?? b) ? c : d`, which is a
+        // different expression.
+        Node.isConditionalExpression(other)
     );
 };
 

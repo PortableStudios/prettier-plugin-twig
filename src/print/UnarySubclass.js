@@ -65,7 +65,16 @@ const printUnarySubclass = (node, path, print) => {
     } else if (!hasTestExpressionArgument) {
         parts.push(node.operator, " ");
     }
-    parts.push(path.call(print, "argument"));
+
+    // `not` reaches printLogicalExpression above, which parenthesises its
+    // argument. Every other operator landed here and printed the argument bare,
+    // so `-(a + b)` came out as `- a + b` -- a different expression.
+    const printedArgument = path.call(print, "argument");
+    if (argumentNeedsParentheses(node.argument)) {
+        parts.push("(", printedArgument, ")");
+    } else {
+        parts.push(printedArgument);
+    }
     wrapExpressionIfNeeded(path, parts, node);
 
     return parts;
