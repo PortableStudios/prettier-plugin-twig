@@ -2,6 +2,7 @@ import { doc } from "prettier";
 import { Node, StringLiteral } from "../melody/melody-types/index.js";
 import {
     printChildBlock,
+    isWhitespaceNode,
     EXPRESSION_NEEDED,
     STRING_NEEDS_QUOTES
 } from "../util/index.js";
@@ -22,22 +23,33 @@ const printBlockStatement = (node, path, print, options) => {
             node.trimRightBlock ? " -%}" : " %}"
         ];
         const parts = [opener];
-
-        if (node.body.length === 0) {
-            parts.push(hardline);
-        }
-
-        if (node.body.length > 0) {
-            const indentedBody = printChildBlock(node, path, print, "body");
-            parts.push(indentedBody);
-        }
-        parts.push(hardline);
-        parts.push(
+        const closer = [
             node.trimLeftEndblock ? "{%-" : "{%",
             " endblock",
             printEndblockName ? [" ", blockName] : "",
             node.trimRight ? " -%}" : " %}"
-        );
+        ];
+
+        // An empty block has nothing to separate. Pushing a hardline for the
+        // absent body and another before the closer left a stray blank line
+        // inside every `{% block x %}{% endblock %}`.
+        if (node.body.length === 0) {
+            parts.push(closer);
+
+            return group(parts);
+        }
+
+        // A body of nothing but whitespace is blank too, but it did span lines
+        // in the source, so keep one break rather than collapsing or doubling.
+        if (node.body.every(isWhitespaceNode)) {
+            parts.push(hardline, closer);
+
+            return group(parts);
+        }
+
+        parts.push(printChildBlock(node, path, print, "body"));
+        parts.push(hardline);
+        parts.push(closer);
 
         return group(parts);
     } else if (Node.isPrintExpressionStatement(node.body)) {
