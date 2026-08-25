@@ -894,7 +894,11 @@ export default class Parser {
         const tokens = this.tokens;
         let node = expr;
         while (!tokens.test(Types.EOF)) {
-            if (tokens.test(Types.DOT) || tokens.test(Types.LBRACE)) {
+            if (
+                tokens.test(Types.DOT) ||
+                tokens.test(Types.LBRACE) ||
+                this.testNullSafeAccess()
+            ) {
                 node = this.matchSubscriptExpression(node);
             } else if (tokens.test(Types.PIPE)) {
                 tokens.next();
@@ -907,9 +911,31 @@ export default class Parser {
         return node;
     }
 
+    /**
+     * Is the stream positioned on a `?.` null-safe member access?
+     *
+     * The lexer emits `?` and `.` as separate tokens, and `?` is also the ternary
+     * operator, so require them to be immediately adjacent: `a?.b` is null-safe
+     * access, `a ? .5 : 0` is a ternary with a float.
+     *
+     * @returns {boolean}
+     */
+    testNullSafeAccess() {
+        const tokens = this.tokens;
+        if (!tokens.test(Types.QUESTION_MARK) || tokens.lat(1) !== Types.DOT) {
+            return false;
+        }
+        return tokens.la(0).end === tokens.la(1).pos.index;
+    }
+
     matchSubscriptExpression(node) {
         const tokens = this.tokens;
-        const op = tokens.next();
+        let op = tokens.next();
+        let nullSafe = false;
+        if (op.type === Types.QUESTION_MARK) {
+            nullSafe = true;
+            op = tokens.expect(Types.DOT);
+        }
         if (op.type === Types.DOT) {
             const token = tokens.next();
             let computed = false;
@@ -933,6 +959,7 @@ export default class Parser {
             }
 
             const memberExpr = new n.MemberExpression(node, property, computed);
+            memberExpr.nullSafe = nullSafe;
             copyStart(memberExpr, node);
             copyEnd(memberExpr, property);
             if (tokens.test(Types.LPAREN)) {

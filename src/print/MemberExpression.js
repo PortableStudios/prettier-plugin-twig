@@ -11,7 +11,15 @@ const printMemberExpression = (node, path, print) => {
     node[EXPRESSION_NEEDED] = false;
     node[STRING_NEEDS_QUOTES] = true;
     const parts = [path.call(print, "object")];
-    parts.push(node.computed ? "[" : ".");
+    // `?.` is Twig's null-safe accessor; dropping the `?` would change behaviour.
+    const accessor = node.computed
+        ? node.nullSafe
+            ? "?.["
+            : "["
+        : node.nullSafe
+          ? "?."
+          : ".";
+    parts.push(accessor);
     parts.push(path.call(print, "property"));
     if (node.computed) {
         parts.push("]");
