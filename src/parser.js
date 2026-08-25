@@ -4,6 +4,7 @@ import {
     TokenStream,
     Parser
 } from "./melody/melody-parser/index.js";
+import { PassthroughStatement } from "./melody/melody-types/index.js";
 import { extension as coreExtension } from "./melody/melody-extension-core/index.js";
 import { createTestExpression } from "./melody/melody-extension-core/operators.js";
 
@@ -87,7 +88,23 @@ const parse = (text, parsers, options) => {
 
     const extensions = [coreExtension];
     const parser = createConfiguredParser(text, multiTagConfig, ...extensions);
-    const ast = parser.parse();
+
+    let ast;
+    try {
+        ast = parser.parse();
+    } catch (cause) {
+        // Twig control flow and the HTML tree don't have to nest, so some valid
+        // templates have no representation in this AST at all -- a tag opened in
+        // one branch and closed in another, for instance. Throwing makes those a
+        // failed build; keeping the file verbatim leaves it merely unformatted,
+        // which is what an unrepresentable template deserves. The warning is the
+        // signal that it happened.
+        console.warn(
+            `[prettier-plugin-twig] left unformatted, could not parse: ${cause.message}`
+        );
+        ast = new PassthroughStatement(text, cause);
+    }
+
     ast[ORIGINAL_SOURCE] = text;
     return ast;
 };

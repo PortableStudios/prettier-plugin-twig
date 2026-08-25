@@ -172,6 +172,24 @@ type(PrintErroredStatement, "PrintErroredStatement");
 alias(PrintErroredStatement, "Statement", "PrintStatement");
 visitor(PrintErroredStatement, "value");
 
+/**
+ * A whole template the parser could not represent, kept verbatim so an
+ * unformattable file is skipped rather than turned into a failed build.
+ */
+export class PassthroughStatement extends Node {
+    /**
+     * @param {string} source The entire original template
+     * @param {?Error} [cause]
+     */
+    constructor(source, cause = null) {
+        super();
+        this.source = source;
+        this.cause = cause;
+    }
+}
+type(PassthroughStatement, "PassthroughStatement");
+alias(PassthroughStatement, "Statement");
+
 export class ConstantValue extends Node {
     constructor(value) {
         super();
