@@ -1,0 +1,10 @@
+{# A tag opened in one branch and closed in another: valid Twig, no AST for it. #}
+{% if wrapped %}
+  <div class="wrap">
+{% endif %}
+
+    <p>Body content stays exactly as written.</p>
+
+{% if wrapped %}
+  </div>
+{% endif %}
