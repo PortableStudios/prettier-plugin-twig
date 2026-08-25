@@ -9,7 +9,7 @@ import {
     NEWLINES_ONLY
 } from "./publicSymbols.js";
 
-const { line, indent, fill, group, hardline } = doc.builders;
+const { line, indent, fill, group, hardline, join, literalline } = doc.builders;
 
 const INLINE_HTML_ELEMENTS = [
     "a",
@@ -612,6 +612,49 @@ const addPreserveWhitespaceInfo = (inlineMap, nodes) => {
     });
 };
 
+/**
+ * The source range a list of AST nodes covers, or null if they carry no usable
+ * location data.
+ *
+ * @param {object[]} nodes
+ * @returns {?{start: number, end: number}}
+ */
+const sourceRangeOf = nodes => {
+    if (!Array.isArray(nodes) || nodes.length === 0) {
+        return null;
+    }
+    const first = nodes[0];
+    const last = nodes[nodes.length - 1];
+    const start = first.loc && first.loc.start && first.loc.start.index;
+    const end = last.loc && last.loc.end && last.loc.end.index;
+    if (typeof start !== "number" || typeof end !== "number") {
+        return null;
+    }
+    return { start, end };
+};
+
+/**
+ * Print a slice of the original source exactly as written. `literalline` stops the
+ * doc printer re-indenting it, so content in a language that isn't markup -- the
+ * body of a `<script>`, or of a `{% js %}` tag -- survives untouched.
+ *
+ * @param {string} source The whole original template
+ * @param {object[]} nodes The nodes whose combined range to emit
+ * @returns {?doc.builders.Doc}
+ */
+const printVerbatimNodes = (source, nodes) => {
+    const range = typeof source === "string" ? sourceRangeOf(nodes) : null;
+    if (!range) {
+        return null;
+    }
+    const raw = source
+        .substring(range.start, range.end)
+        // The caller emits its own break before the closing tag.
+        .replace(/\n[ \t]*$/, "");
+
+    return join(literalline, raw.split("\n"));
+};
+
 const indentWithHardline = contents => indent([hardline, contents]);
 
 const printChildGroups = (node, path, print, ...childPath) => {
@@ -673,6 +716,7 @@ export {
     testCurrentAndParentNodes,
     isWhitespaceOnly,
     isWhitespaceNode,
+    printVerbatimNodes,
     startsWithWhitespace,
     endsWithWhitespace,
     isWhitespaceInsensitiveInlineElement,

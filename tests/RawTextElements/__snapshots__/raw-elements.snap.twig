@@ -1,0 +1,14 @@
+<div>
+    <script>
+    // WCAG badges computed from the RENDERED colours — getComputedStyle
+    // returns the browser's resolved values, so this checks real output
+    // rather than mirroring formulas elsewhere.
+    const probe = document.createElement('canvas').getContext('2d', { willReadFrequently: true });
+    const label = "{{ label }}";
+    </script>
+
+    <style>
+    /* a comment */
+    .thing { color: var(--color-{{ name }}); }
+    </style>
+</div>

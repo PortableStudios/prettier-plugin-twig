@@ -1,5 +1,6 @@
 import { doc } from "prettier";
 import {
+    printVerbatimNodes,
     removeSurroundingWhitespace,
     isInlineElement,
     isOwnlineElement,
@@ -10,6 +11,7 @@ import {
     EXPRESSION_NEEDED,
     STRING_NEEDS_QUOTES
 } from "../util/index.js";
+import { ORIGINAL_SOURCE } from "../parser.js";
 
 const { group, line, hardline, softline, indent, join } = doc.builders;
 
@@ -63,6 +65,18 @@ const printSeparatedList = (path, print, separator, attrName) => {
     return join([separator, line], path.map(print, attrName));
 };
 
+/**
+ * Elements whose content is not markup. The HTML spec calls these raw text
+ * elements: everything up to the closing tag is data, so reflowing it as text
+ * breaks the language inside -- a line break lands mid string literal, and code
+ * after a `//` comment ends up inside it.
+ *
+ * @type {string[]}
+ */
+const RAW_TEXT_ELEMENTS = ["script", "style"];
+
+const closingTagFor = node => ["</", node.name, ">"];
+
 const printElement = (node, path, print, options) => {
     // Whitespace at a truly-inline element's content boundary is rendered, so it
     // can be neither invented nor dropped. inline-block elements (button) are
@@ -95,6 +109,25 @@ const printElement = (node, path, print, options) => {
     }
 
     const groupElement = Symbol("element");
+
+    // Raw text elements are emitted exactly as written. Prettier core hands these
+    // to its JS/CSS printers, which isn't available here: the body may be
+    // interleaved with Twig output tags that no JS or CSS parser accepts.
+    if (RAW_TEXT_ELEMENTS.indexOf(node.name) > -1) {
+        const source = path.stack.length
+            ? path.stack[0][ORIGINAL_SOURCE]
+            : null;
+        const verbatim = printVerbatimNodes(source, node.children);
+        if (verbatim) {
+            return group(
+                [openingGroup, verbatim, hardline, closingTagFor(node)],
+                {
+                    id: groupElement
+                }
+            );
+        }
+    }
+
     node.children = removeSurroundingWhitespace(node.children);
 
     const childGroups = printChildGroups(node, path, print, "children");
