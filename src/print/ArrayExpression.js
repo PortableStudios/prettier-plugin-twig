@@ -1,12 +1,15 @@
 import { doc } from "prettier";
 import { STRING_NEEDS_QUOTES } from "../util/index.js";
 
-const { group, softline, line, indent, join } = doc.builders;
+const { group, softline, line, ifBreak, indent, join } = doc.builders;
 
-const printArrayExpression = (node, path, print) => {
+const printArrayExpression = (node, path, print, options) => {
     node[STRING_NEEDS_QUOTES] = true;
     const mappedElements = path.map(print, "elements");
     const indentedContent = [softline, join([",", line], mappedElements)];
+    if (options.twigTrailingComma === "all") {
+        indentedContent.push(ifBreak(","));
+    }
 
     return group(["[", indent(indentedContent), softline, "]"]);
 };

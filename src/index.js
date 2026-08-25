@@ -92,6 +92,21 @@ const options = {
         default: true,
         description: "Use single quotes in Twig files?"
     },
+    twigTrailingComma: {
+        type: "choice",
+        category: "Global",
+        default: "none",
+        description:
+            "Print a trailing comma on the last entry of a multi-line hash or array.",
+        choices: [
+            { value: "none", description: "No trailing commas." },
+            {
+                value: "all",
+                description:
+                    "Trailing comma wherever a hash or array breaks across lines."
+            }
+        ]
+    },
     twigAlwaysBreakObjects: {
         type: "boolean",
         category: "Global",
