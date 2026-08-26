@@ -1,6 +1,7 @@
 import { doc } from "prettier";
+import { printTagBody } from "../util/index.js";
 
-const { group, join, line, softline, hardline, indent } = doc.builders;
+const { group, join, line, softline, indent } = doc.builders;
 
 const printOpener = (node, path, print) => {
     const parts = [
@@ -18,9 +19,8 @@ const printOpener = (node, path, print) => {
 
 const printMacroDeclarationStatement = (node, path, print) => {
     const parts = [printOpener(node, path, print)];
-    parts.push(indent([hardline, path.call(print, "body")]));
+    parts.push(...printTagBody(node, path, print, "body"));
     parts.push(
-        hardline,
         node.trimLeftEndmacro ? "{%-" : "{%",
         " endmacro ",
         node.trimRight ? "-%}" : "%}"

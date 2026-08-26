@@ -1,7 +1,7 @@
 import { doc } from "prettier";
-import { printChildBlock } from "../util/index.js";
+import { printTagBody } from "../util/index.js";
 
-const { hardline, group } = doc.builders;
+const { group } = doc.builders;
 
 const printSpacelessBlock = (node, path, print) => {
     const parts = [
@@ -9,8 +9,7 @@ const printSpacelessBlock = (node, path, print) => {
         " spaceless ",
         node.trimRightSpaceless ? "-%}" : "%}"
     ];
-    parts.push(printChildBlock(node, path, print, "body"));
-    parts.push(hardline);
+    parts.push(...printTagBody(node, path, print, "body"));
     parts.push(
         node.trimLeftEndspaceless ? "{%-" : "{%",
         " endspaceless ",

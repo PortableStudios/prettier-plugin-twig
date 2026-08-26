@@ -68,10 +68,22 @@ const printGenericTwigTag = (node, path, print, options) => {
     const source = path.stack.length ? path.stack[0][ORIGINAL_SOURCE] : null;
     const isRawTag = rawTags.indexOf(node.tagName) > -1;
 
+    // Printing a section drops its surrounding whitespace, so a whitespace-only
+    // body is indistinguishable from an empty one afterwards. Record which
+    // sections held nothing at all before that happens.
+    const wasEmpty = node.sections.map(
+        section => !Node.isGenericTwigTag(section) && isEmptySequence(section)
+    );
+
     const printedSections = path.map(print, "sections");
     node.sections.forEach((section, i) => {
         if (Node.isGenericTwigTag(section)) {
-            parts.push([hardline, printedSections[i]]);
+            // Nothing stood between this tag and the one before it, so keep them
+            // welded: a break here would become the tag's own output.
+            const isWelded = i === 0 || wasEmpty[i - 1];
+            parts.push(
+                isWelded ? printedSections[i] : [hardline, printedSections[i]]
+            );
         } else if (!isEmptySequence(section)) {
             if (isRawTag && canPrintVerbatim(source, section)) {
                 parts.push(printVerbatimSection(source, section));

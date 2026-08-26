@@ -1,14 +1,14 @@
 import { doc } from "prettier";
 import { Node } from "../melody/melody-types/index.js";
 import {
-    printChildBlock,
+    printTagBody,
     hasNoNewlines,
     EXPRESSION_NEEDED,
     PRESERVE_LEADING_WHITESPACE,
     PRESERVE_TRAILING_WHITESPACE
 } from "../util/index.js";
 
-const { group, indent, line, hardline } = doc.builders;
+const { group, indent, line } = doc.builders;
 
 const IS_ELSEIF = Symbol("IS_ELSEIF");
 
@@ -47,29 +47,29 @@ const printIfStatement = (node, path, print) => {
         " ",
         node.trimRightIf ? "-%}" : "%}"
     ]);
-    const ifBody = printInline
-        ? isEmptyIf
-            ? ""
-            : path.call(print, "consequent", "0")
-        : printChildBlock(node, path, print, "consequent");
-    const parts = [ifClause, ifBody];
+    const parts = [ifClause];
+    // Each body carries the break that separates it from the tag that follows,
+    // so an empty branch leaves its tags welded together rather than opening a
+    // blank line between them.
+    if (printInline) {
+        parts.push(isEmptyIf ? "" : path.call(print, "consequent", "0"));
+    } else {
+        parts.push(...printTagBody(node, path, print, "consequent"));
+    }
     if (hasElseBranch) {
         parts.push(
-            hardline,
             node.trimLeftElse ? "{%-" : "{%",
             " else ",
             node.trimRightElse ? "-%}" : "%}"
         );
-        parts.push(printChildBlock(node, path, print, "alternate"));
+        parts.push(...printTagBody(node, path, print, "alternate"));
     } else if (hasElseIfBranch) {
         node.alternate[IS_ELSEIF] = true;
-        parts.push(hardline);
         parts.push(path.call(print, "alternate"));
     }
     // The {% endif %} will be taken care of by the "root" if statement
     if (!isElseIf) {
         parts.push(
-            printInline ? "" : hardline,
             node.trimLeftEndif ? "{%-" : "{%",
             " endif ",
             node.trimRight ? "-%}" : "%}"
