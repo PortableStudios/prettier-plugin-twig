@@ -2,6 +2,7 @@ import { doc } from "prettier";
 import { Node } from "../melody/melody-types/index.js";
 import {
     printTagBody,
+    isFilteredLiteral,
     isNotExpression,
     STRING_NEEDS_QUOTES,
     GROUP_TOP_LEVEL_LOGICAL
@@ -12,7 +13,11 @@ const { group, line, hardline } = doc.builders;
 const shouldAvoidBreakBeforeClosing = valueNode =>
     Node.isObjectExpression(valueNode) ||
     isNotExpression(valueNode) ||
-    Node.isArrayExpression(valueNode);
+    Node.isArrayExpression(valueNode) ||
+    // A call, or a filter over a literal, breaks inside its own argument list,
+    // so `%}` has no reason to leave the line.
+    Node.isCallExpression(valueNode) ||
+    isFilteredLiteral(valueNode);
 
 const buildSetStatement = (node, path, print, assignmentIndex) => {
     const varDeclaration = node.assignments[assignmentIndex];

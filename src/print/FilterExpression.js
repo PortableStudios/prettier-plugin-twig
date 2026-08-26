@@ -9,7 +9,8 @@ import {
     wrapInStringInterpolation,
     someParentNode,
     needsParenthesesUnderPostfix,
-    getDeepProperty
+    getDeepProperty,
+    hasOnlyLiteralArguments
 } from "../util/index.js";
 
 const { group, indent, line, softline, join } = doc.builders;
@@ -30,6 +31,10 @@ const printArguments = (node, path, print, nodePath) => {
     ) {
         // Optimization: Avoid additional indentation level
         return group(["(", printedArguments[0], ")"]);
+    }
+
+    if (hasOnlyLiteralArguments(node)) {
+        return ["(", join(", ", printedArguments), ")"];
     }
 
     return group([
