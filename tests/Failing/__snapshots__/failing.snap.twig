@@ -53,12 +53,13 @@
 {% endfor %}
 
 {# There should be no whitespace changes in textarea #}
-<textarea class="{{ codePreview }}">
-    {{ '
+<textarea class="{{ codePreview }}">{{
+'
 {% icon "' ~ icon ~ '" with {
-    classList: "' ~ (classMap | classes) ~ '",
+    classList: "' ~ classMap | classes ~ '",
 } %}
-' }}
+'
+        }}
 </textarea>
 
 {# Before the closing -->, whitespace keeps being added #}

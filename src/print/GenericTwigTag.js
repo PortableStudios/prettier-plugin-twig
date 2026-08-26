@@ -10,7 +10,19 @@ import { ORIGINAL_SOURCE } from "../parser.js";
 
 const { hardline, join, literalline } = doc.builders;
 
-const DEFAULT_RAW_TAGS = ["js", "css", "script"];
+const DEFAULT_RAW_TAGS = [
+    "js",
+    "css",
+    "script",
+    // `verbatim` exists to emit its body untouched, so any whitespace change
+    // here is an output change. `apply`/`filter` pipe the body through a filter:
+    // under `markdown_to_html` or `nl2br` its line breaks are data. Reflowing is
+    // only safe for filters like `spaceless` that discard whitespace anyway, so
+    // the conservative default is to leave all of them alone.
+    "verbatim",
+    "apply",
+    "filter"
+];
 
 /**
  * Emit a section exactly as it was written, with `literalline` so the doc printer

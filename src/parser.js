@@ -82,7 +82,7 @@ const registerTestExtensions = (testExpressions = []) => {
     );
 };
 
-const DEFAULT_RAW_TAGS = ["js", "css", "script"];
+const DEFAULT_RAW_TAGS = ["js", "css", "script", "verbatim", "apply", "filter"];
 
 /**
  * A raw tag only reaches the verbatim printer if it is also a registered

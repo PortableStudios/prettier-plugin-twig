@@ -73,7 +73,20 @@ const printSeparatedList = (path, print, separator, attrName) => {
  *
  * @type {string[]}
  */
-const RAW_TEXT_ELEMENTS = ["script", "style"];
+const RAW_TEXT_ELEMENTS = [
+    "script",
+    "style",
+    // `pre` and `textarea` render whitespace literally, so reflowing them is an
+    // output change -- in a textarea, a change to the value the form submits.
+    // `listing`, `plaintext` and `xmp` are their obsolete equivalents. Checked
+    // against prettier's HTML printer: these seven are exactly the elements it
+    // preserves byte-for-byte, and nothing else is.
+    "pre",
+    "textarea",
+    "listing",
+    "plaintext",
+    "xmp"
+];
 
 const closingTagFor = node => ["</", node.name, ">"];
 

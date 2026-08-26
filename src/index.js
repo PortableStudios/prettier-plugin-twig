@@ -83,7 +83,9 @@ const options = {
         type: "path",
         category: "Global",
         array: true,
-        default: [{ value: ["js", "css", "script"] }],
+        default: [
+            { value: ["js", "css", "script", "verbatim", "apply", "filter"] }
+        ],
         description:
             "Tags whose body is not template markup and must be emitted verbatim."
     },
