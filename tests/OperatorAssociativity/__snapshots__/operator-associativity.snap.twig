@@ -1,0 +1,21 @@
+{# `-` `/` `//` `%` are left-associative, so re-associating the right operand
+   changes the result: `a - (b - c)` is not `a - b - c`. These parens are
+   load-bearing and must survive a format pass. #}
+{{ a - (b - c) }}
+{{ a / (b * c) }}
+{{ a / (b / c) }}
+{{ a % (b * c) }}
+{{ 0.9 - (1 - drawTop) / (canvasW * aspectRatio) }}
+
+{# `+` `*` `~` are associative, so the same shape is safe bare and should not
+   gain noise. #}
+{{ a + b + c }}
+{{ a * b * c }}
+{{ a + b - c }}
+
+{# already unparenthesised, left alone #}
+{{ a - b - c }}
+{{ a / b * c }}
+
+{# the left operand at equal precedence never needs them #}
+{{ a - b - c }}

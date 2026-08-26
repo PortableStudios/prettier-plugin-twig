@@ -1,0 +1,19 @@
+{# `??` sits at precedence 300, so the table says these parens are redundant.
+   Twig 3.15 deprecated the unparenthesised form ahead of moving `??` to
+   precedence 5, so they must survive a format pass. #}
+{{ (x ?? 9) + 0 }}
+{{ (x ?? 55) / 100 }}
+{{ (p ?? 1) * (q ?? 2) }}
+
+{# `???` (craft's empty-coalesce) behaves the same way #}
+{{ (x ??? 'fallback') ~ 'suffix' }}
+
+{# a bare coalesce needs nothing added #}
+{{ x ?? 9 }}
+{{ entry.onPageTitle ?? entry.title }}
+
+{# a coalesce chain means the same under either grouping, so it stays bare #}
+{{ a ?? b ?? c }}
+
+{# a coalesce as a whole statement, not an operand, is untouched #}
+{% set steps = req.getQueryParam('steps') ?? 9 %}

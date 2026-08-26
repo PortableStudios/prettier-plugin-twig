@@ -47,6 +47,19 @@ const hasLogicalOperator = node => {
     return node.operator === "or" || node.operator === "and";
 };
 
+const isCoalesceOperator = node => {
+    return (
+        Node.isBinaryNullCoalesceExpression(node) ||
+        Node.isBinaryEmptyCoalesceExpression(node)
+    );
+};
+
+// Left-associative operators for which re-associating the right operand changes
+// the result. `a - (b - c)` is not `a - b - c`, and `a / (b * c)` is not
+// `a / b * c`. Their associative counterparts at the same precedence (`+`, `*`)
+// are safe to leave bare, so they stay out of this list to avoid adding noise.
+const NON_ASSOCIATIVE = ["-", "/", "//", "%"];
+
 const otherNeedsParentheses = (node, otherProp) => {
     const other = node[otherProp];
     const isBinaryOther = Node.isBinaryExpression(other);
@@ -64,7 +77,28 @@ const otherNeedsParentheses = (node, otherProp) => {
         // operand it always needs parentheses -- not just under `~`. Without
         // them `a ?? (b ? c : d)` reassociates to `(a ?? b) ? c : d`, which is a
         // different expression.
-        Node.isConditionalExpression(other)
+        Node.isConditionalExpression(other) ||
+        // `??` and `???` sit at precedence 300 today, so the table above says an
+        // operand of a tighter-binding operator needs no parentheses -- and
+        // under current Twig that is true. But Twig 3.15 deprecated the
+        // unparenthesised form ahead of moving `??` to precedence 5 in the next
+        // major, at which point `(x ?? 9) + 0` and `x ?? 9 + 0` stop agreeing.
+        // Emitting the parentheses keeps output warning-free now and correct
+        // after that change. Fixing it here rather than lowering the table value
+        // is deliberate: that value also drives the parser, so lowering it would
+        // silently re-associate existing unparenthesised source.
+        // A coalesce directly inside another coalesce is exempt: `a ?? b ?? c`
+        // means the same under either grouping, so parenthesising it is pure
+        // noise.
+        (isCoalesceOperator(other) && !isCoalesceOperator(node)) ||
+        // Equal precedence on the right of a non-associative operator. The
+        // precedence comparisons above only catch a *looser* operand, so this
+        // case fell through and the parentheses were dropped -- silently turning
+        // `(1 - t) / (w * r)` into `(1 - t) / w * r`, a different number.
+        (otherProp === "right" &&
+            isBinaryOther &&
+            otherPrecedence === ownPrecedence &&
+            NON_ASSOCIATIVE.indexOf(node.operator) > -1)
     );
 };
 
