@@ -44,6 +44,88 @@ const INLINE_HTML_ELEMENTS = [
 ];
 
 /**
+ * HTML elements whose default display is block-level: `block`, `list-item`, or
+ * one of the `table-*` displays. Whitespace next to one of these is not rendered,
+ * so a formatter may add or drop it freely. Whitespace next to anything else is
+ * rendered, so it has to survive untouched.
+ *
+ * This is an exclusion list on purpose. An element the list does not name -- a
+ * custom element, an element added to HTML after this was written -- is
+ * `display: inline` in a browser, so treating the unknown case as
+ * whitespace-sensitive is the safe default and the accurate one.
+ *
+ * Taken from prettier core's own tag/display table and filtered with the same
+ * predicate core applies to sibling whitespace, so the two agree element for
+ * element. Note what is deliberately absent: `inline-block` elements (`input`,
+ * `button`, `select`, `video`, `audio`, `object`, `meter`, `progress`) and
+ * `display: none` elements (`head`, `title`, `style`, `link`, `meta`) all keep
+ * the whitespace around them, exactly as core does.
+ *
+ * @type {Set<string>}
+ */
+const BLOCK_HTML_ELEMENTS = new Set([
+    "address",
+    "article",
+    "aside",
+    "blockquote",
+    "body",
+    "caption",
+    "center",
+    "col",
+    "colgroup",
+    "dd",
+    "details",
+    "dialog",
+    "dir",
+    "div",
+    "dl",
+    "dt",
+    "fieldset",
+    "figcaption",
+    "figure",
+    "footer",
+    "form",
+    "h1",
+    "h2",
+    "h3",
+    "h4",
+    "h5",
+    "h6",
+    "header",
+    "hgroup",
+    "hr",
+    "html",
+    "legend",
+    "li",
+    "listing",
+    "main",
+    "menu",
+    "nav",
+    "ol",
+    "optgroup",
+    "option",
+    "p",
+    "param",
+    "plaintext",
+    "pre",
+    "script",
+    "search",
+    "section",
+    "source",
+    "summary",
+    "table",
+    "tbody",
+    "td",
+    "tfoot",
+    "th",
+    "thead",
+    "tr",
+    "track",
+    "ul",
+    "xmp"
+]);
+
+/**
  * Introducing new "type" html element that should be printed on their own line
  * @type {string[]}
  */
@@ -647,14 +729,46 @@ const isInlineElement = node => {
     );
 };
 
+/**
+ * Is this an HTML element the browser lays out as a block?
+ *
+ * @param {object} node
+ * @returns {boolean}
+ */
+const isBlockLevelElement = node =>
+    Node.isElement(node) &&
+    BLOCK_HTML_ELEMENTS.has(String(node.name).toLowerCase());
+
+/**
+ * Does whitespace beside this node reach the rendered page?
+ *
+ * Everything does unless it is a block-level element, which is why this asks
+ * what a node is not. A `<span>`, an `<svg>`, an `<input>`, a custom element and
+ * a `{% if %}` all sit in the inline flow, so a space beside them is a space in
+ * the output and deleting it joins two words. A doctype renders nothing and can
+ * only appear where whitespace is ignored.
+ *
+ * @param {object} node
+ * @returns {boolean}
+ */
+const preservesSurroundingWhitespace = node => {
+    if (Node.isElement(node)) {
+        return !isBlockLevelElement(node);
+    }
+    if (Node.isPrintTextStatement(node)) {
+        return isInlineTextStatement(node);
+    }
+    if (Node.isDeclaration(node)) {
+        return false;
+    }
+    return true;
+};
+
 export const isOwnlineElement = node => {
     return (
         Node.isElement(node) && OWNLINE_HTML_ELEMENTS.indexOf(node.name) >= 0
     );
 };
-
-const isCommentNode = node =>
-    Node.isTwigComment(node) || Node.isHtmlComment(node);
 
 const createInlineMap = nodes => nodes.map(node => isInlineElement(node));
 
@@ -666,22 +780,24 @@ const textStatementsOnlyNewlines = nodes => {
     });
 };
 
-const addPreserveWhitespaceInfo = (inlineMap, nodes) => {
+/**
+ * Flags the text nodes whose leading or trailing whitespace has to survive,
+ * which is any text node with a whitespace-preserving sibling on that side.
+ *
+ * @param {object[]} nodes The children of one element or tag body
+ * @returns {void}
+ */
+const addPreserveWhitespaceInfo = nodes => {
+    const preservesWhitespace = nodes.map(preservesSurroundingWhitespace);
     nodes.forEach((node, index) => {
-        const previousNodeIsComment =
-            index > 0 && isCommentNode(nodes[index - 1]);
-        const followingNodeIsComment =
-            index < nodes.length - 1 && isCommentNode(nodes[index + 1]);
-        if (Node.isPrintTextStatement(node)) {
-            const hasPreviousInlineElement = index > 0 && inlineMap[index - 1];
-            if (hasPreviousInlineElement || previousNodeIsComment) {
-                node[PRESERVE_LEADING_WHITESPACE] = true;
-            }
-            const hasFollowingInlineElement =
-                index < inlineMap.length - 1 && inlineMap[index + 1];
-            if (hasFollowingInlineElement || followingNodeIsComment) {
-                node[PRESERVE_TRAILING_WHITESPACE] = true;
-            }
+        if (!Node.isPrintTextStatement(node)) {
+            return;
+        }
+        if (index > 0 && preservesWhitespace[index - 1]) {
+            node[PRESERVE_LEADING_WHITESPACE] = true;
+        }
+        if (index < nodes.length - 1 && preservesWhitespace[index + 1]) {
+            node[PRESERVE_TRAILING_WHITESPACE] = true;
         }
     });
 };
@@ -736,7 +852,7 @@ const printChildGroups = (node, path, print, ...childPath) => {
     // be printed inline
     const children = getDeepProperty(node, ...childPath);
     const inlineMap = createInlineMap(children);
-    addPreserveWhitespaceInfo(inlineMap, children);
+    addPreserveWhitespaceInfo(children);
     textStatementsOnlyNewlines(children);
     const printedChildren = path.map(print, ...childPath);
     // Go over the children, while carrying along a group to be filled
@@ -810,6 +926,8 @@ export {
     getDeepProperty,
     setDeepProperty,
     isInlineElement,
+    isBlockLevelElement,
+    preservesSurroundingWhitespace,
     printChildBlock,
     printChildGroups,
     printTagBody,
