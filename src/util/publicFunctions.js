@@ -85,6 +85,23 @@ const registerContractableNodeType = nodeType => {
     CONTRACTABLE_NODE_TYPES.push(nodeType);
 };
 
+/**
+ * A single filter over a bare literal — `'some text'|t('site')`. Neither side
+ * has a break point of its own, so only the argument list can break, and the
+ * delimiters have no reason to leave the expression.
+ */
+const isFilteredLiteral = node =>
+    Node.isFilterExpression(node) && Node.isLiteral(node.target);
+
+/**
+ * An argument list of bare literals has no break points of its own, so breaking
+ * it can never make an over-long line fit — it only strands the delimiters.
+ */
+const hasOnlyLiteralArguments = node =>
+    Array.isArray(node.arguments) &&
+    node.arguments.length > 0 &&
+    node.arguments.every(argument => Node.isLiteral(argument));
+
 const isContractableNodeType = node => {
     for (let i = 0; i < CONTRACTABLE_NODE_TYPES.length; i++) {
         const contractableNodeType = CONTRACTABLE_NODE_TYPES[i];
@@ -94,6 +111,9 @@ const isContractableNodeType = node => {
         }
     }
     if (Node.isUnaryLike(node)) {
+        return true;
+    }
+    if (isFilteredLiteral(node)) {
         return true;
     }
     return false;
@@ -584,6 +604,8 @@ export {
     walkParents,
     firstValueInAncestorChain,
     isContractableNodeType,
+    isFilteredLiteral,
+    hasOnlyLiteralArguments,
     isNotExpression,
     isMultipartExpression,
     registerContractableNodeType,

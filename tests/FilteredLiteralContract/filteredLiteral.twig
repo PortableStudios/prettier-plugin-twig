@@ -1,0 +1,10 @@
+<p>{{ 'Short'|t('site') }}</p>
+<p>{{ 'A translated string long enough that no amount of breaking will make it fit.'|t('site') }}</p>
+<p>{{ 'A translated string long enough that no amount of breaking will make it fit.'|t }}</p>
+<p>{{ 'A string that is long enough to overflow the print width on its own.'|replace({ a: 'b' }) }}</p>
+<p>{{ 'SHOUTING'|lower|escape('html')|upper|escape('markdown')|lower|upper|escape('markdown') }}</p>
+<p>{{ aVariableThatIsQuiteLongIndeed|someFilterWithAnAwfullyLongNameToo('an argument') }}</p>
+
+{% set intro = 'A translated string long enough that no amount of breaking will make it fit.'|t('site') %}
+{% set nums = someValue|slice(0, 3) %}
+{% set jobs = craft.entries.section('jobs').status('live').orderBy('postDate desc').all() %}
