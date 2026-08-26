@@ -503,6 +503,63 @@ const printChildBlock = (node, path, print, ...childPath) => {
     return indent(group([hardline, ...childGroups]));
 };
 
+/**
+ * The children of a tag body, which is either a plain array of nodes or a
+ * SequenceExpression wrapping one, or null if it is neither.
+ *
+ * @param {*} body
+ * @returns {?object[]}
+ */
+const bodyChildren = body => {
+    if (Array.isArray(body)) {
+        return body;
+    }
+    if (Node.isSequenceExpression(body) && Array.isArray(body.expressions)) {
+        return body.expressions;
+    }
+    return null;
+};
+
+/**
+ * Prints the body of a body-bearing tag together with the break that separates
+ * it from whatever tag follows -- `{% endblock %}`, `{% else %}`, `{% endfor %}`.
+ * The caller emits the tags themselves and spreads this in between.
+ *
+ * An empty body has nothing to separate. Emitting a break for the absent body
+ * and another before the closing tag leaves a blank line inside every
+ * `{% tag %}{% endtag %}`, and that blank line is content: it makes an empty
+ * `{% set %}` truthy and an empty `{% macro %}` return a newline.
+ *
+ * A body of nothing but whitespace is blank too, but it did span lines in the
+ * source, so keep one break rather than collapsing or doubling. Twig drops the
+ * first newline after a `%}`, so one break is exactly as empty as no break.
+ *
+ * @param {object} node
+ * @param {FastPath} path A standard Prettier FastPath object
+ * @param {function} print The Prettier print callback
+ * @param {...string} childPath Property path from the node to its body
+ * @returns {array} Doc parts to place between the opening and closing tags
+ */
+const printTagBody = (node, path, print, ...childPath) => {
+    const body = getDeepProperty(node, ...childPath);
+    const children = bodyChildren(body);
+
+    if (children !== null) {
+        if (children.length === 0) {
+            return [];
+        }
+        if (children.every(isWhitespaceNode)) {
+            return [hardline];
+        }
+    }
+
+    const printed = Array.isArray(body)
+        ? printChildBlock(node, path, print, ...childPath)
+        : indentWithHardline(path.call(print, ...childPath));
+
+    return [printed, hardline];
+};
+
 const addNewlineIfNotEmpty = items => {
     if (items.length > 0) {
         items.push(hardline);
@@ -755,5 +812,6 @@ export {
     isInlineElement,
     printChildBlock,
     printChildGroups,
+    printTagBody,
     indentWithHardline
 };

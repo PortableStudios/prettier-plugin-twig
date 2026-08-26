@@ -1,11 +1,7 @@
 import { doc } from "prettier";
-import {
-    EXPRESSION_NEEDED,
-    isWhitespaceNode,
-    indentWithHardline
-} from "../util/index.js";
+import { EXPRESSION_NEEDED, printTagBody } from "../util/index.js";
 
-const { group, indent, line, hardline } = doc.builders;
+const { group, indent, line } = doc.builders;
 
 const printFor = (node, path, print) => {
     const parts = [node.trimLeft ? "{%-" : "{%", " for "];
@@ -27,26 +23,16 @@ const printFor = (node, path, print) => {
 const printForStatement = (node, path, print) => {
     node[EXPRESSION_NEEDED] = false;
     const parts = [printFor(node, path, print)];
-    const isBodyEmpty =
-        node.body.expressions.length === 0 ||
-        (node.body.expressions.length === 1 &&
-            isWhitespaceNode(node.body.expressions[0]));
-    const printedChildren = path.call(print, "body");
-    if (!isBodyEmpty || node.otherwise) {
-        parts.push(indentWithHardline(printedChildren));
-    }
+    parts.push(...printTagBody(node, path, print, "body"));
     if (node.otherwise) {
         parts.push(
-            hardline,
             node.trimLeftElse ? "{%-" : "{%",
             " else ",
             node.trimRightElse ? "-%}" : "%}"
         );
-        const printedOtherwise = path.call(print, "otherwise");
-        parts.push(indentWithHardline(printedOtherwise));
+        parts.push(...printTagBody(node, path, print, "otherwise"));
     }
     parts.push(
-        isBodyEmpty ? "" : hardline,
         node.trimLeftEndfor ? "{%-" : "{%",
         " endfor ",
         node.trimRight ? "-%}" : "%}"

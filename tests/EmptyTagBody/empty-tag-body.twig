@@ -1,0 +1,27 @@
+{% macro noBody() %}{% endmacro %}
+
+{% set captured %}{% endset %}
+
+{% embed 'child.twig' %}{% endembed %}
+
+{% spaceless %}{% endspaceless %}
+
+{% filter upper %}{% endfilter %}
+
+{% autoescape %}{% endautoescape %}
+
+{% if condition %}{% else %}fallback{% endif %}
+
+{% for item in items %}{% else %}nothing{% endfor %}
+
+{% macro blankBody() %}
+{% endmacro %}
+
+{% set blankCapture %}
+{% endset %}
+
+{% filter upper %}
+{% endfilter %}
+
+{% if condition %}
+{% endif %}

@@ -2,10 +2,10 @@ import { doc } from "prettier";
 import {
     EXPRESSION_NEEDED,
     STRING_NEEDS_QUOTES,
-    printChildBlock
+    printTagBody
 } from "../util/index.js";
 
-const { indent, hardline, line, group } = doc.builders;
+const { indent, line, group } = doc.builders;
 
 const printOpener = (node, path, print) => {
     node[EXPRESSION_NEEDED] = false;
@@ -26,16 +26,15 @@ const printOpener = (node, path, print) => {
 };
 
 const printEmbedStatement = (node, path, print) => {
-    const children = printChildBlock(node, path, print, "blocks");
+    const children = printTagBody(node, path, print, "blocks");
     const printedOpener = printOpener(node, path, print);
     const closing = [
-        hardline,
         node.trimLeftEndembed ? "{%-" : "{%",
         " endembed ",
         node.trimRight ? "-%}" : "%}"
     ];
 
-    return [printedOpener, children, closing];
+    return [printedOpener, ...children, closing];
 };
 
 export { printEmbedStatement };

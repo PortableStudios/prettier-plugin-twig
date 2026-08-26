@@ -1,8 +1,5 @@
-import { doc } from "prettier";
 import isBoolean from "lodash/isBoolean.js";
-import { printChildBlock, quoteChar } from "../util/index.js";
-
-const { hardline } = doc.builders;
+import { printTagBody, quoteChar } from "../util/index.js";
 
 const printEscapeType = (escapeType, options) => {
     if (escapeType === null) {
@@ -27,9 +24,8 @@ const createOpener = (node, options) => {
 
 const printAutoescapeBlock = (node, path, print, options) => {
     const parts = [createOpener(node, options)];
-    parts.push(printChildBlock(node, path, print, "expressions"));
+    parts.push(...printTagBody(node, path, print, "expressions"));
     parts.push(
-        hardline,
         node.trimLeftEndautoescape ? "{%-" : "{%",
         " endautoescape ",
         node.trimRight ? "-%}" : "%}"
