@@ -28,6 +28,7 @@
         isAriaHidden: not (tooltipOpen ?? false)
     } only
 %}
+    {# Necessary block to inject html into the tooltip #}
     {% block text %}
         <p>
             Hey>

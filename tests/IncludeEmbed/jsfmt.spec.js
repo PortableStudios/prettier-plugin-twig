@@ -25,6 +25,16 @@ describe("Include embed", () => {
         });
         await expect(actual).toMatchFileSnapshot(snapshotFile);
     });
+    it("should keep comments between the blocks of an embed", async () => {
+        const { actual, snapshotFile } = await run_spec(import.meta.url, {
+            source: "embedComments.twig"
+        });
+        expect(actual).toContain("{# before the first block #}");
+        expect(actual).toContain("{# between blocks #}");
+        expect(actual).toContain("{# a second comment, after a blank line #}");
+        expect(actual).toContain("{# after the last block #}");
+        await expect(actual).toMatchFileSnapshot(snapshotFile);
+    });
     it("should handle extends embed", async () => {
         const { actual, snapshotFile } = await run_spec(import.meta.url, {
             source: "extendsEmbed.twig"
