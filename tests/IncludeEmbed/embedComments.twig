@@ -1,0 +1,9 @@
+{% embed "card.twig" with { x: 1 } only %}
+    {# before the first block #}
+    {% block image %}<p>a</p>{% endblock %}
+    {# between blocks #}
+
+    {# a second comment, after a blank line #}
+    {% block heading %}<p>b</p>{% endblock %}
+    {# after the last block #}
+{% endembed %}

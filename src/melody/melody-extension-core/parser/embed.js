@@ -59,7 +59,8 @@ export const EmbedParser = {
                 }
                 return result;
             }).expressions,
-            Node.isBlockStatement
+            // Twig allows only blocks and comments here; keep the comments too.
+            node => Node.isBlockStatement(node) || Node.isTwigComment(node)
         );
 
         setStartFromToken(embedStatement, token);
